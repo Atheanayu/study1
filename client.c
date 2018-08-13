@@ -6,9 +6,9 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #define MAX_LINE 20
-#define THR_NUM 3
+#define THR_NUM 2
 static int PORT = 6000;
-static char msg[THR_NUM][MAX_LINE] = {"AAA","BBB","CCC"};
+static char msg[THR_NUM][MAX_LINE] = {"AAA","BBB"};
 typedef struct {
     struct sockaddr_in sin;
     int sfd,order;
@@ -38,7 +38,6 @@ void * thfn(void *arg){
     }
     close(p->sfd);
     return (void *)0;
-
 }
 int main(){
     ARG arg[THR_NUM];
@@ -51,8 +50,7 @@ int main(){
         inet_pton(AF_INET, "127.0.0.1", &((arg[i].sin).sin_addr));
         arg[i].sin.sin_port = htons(PORT);
         mtid = pthread_self();
-        //pthread_create(&mtid,NULL,thfn,&(arg[i]));
-        thfn(&(arg[i]));
+        pthread_create(&mtid,NULL,thfn,&(arg[i]));
     }
     sleep(10);
     exit(0);

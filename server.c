@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <pthread.h>
-#define THR_NUM 3
+#define THR_NUM 2
 #define MAX_LINE 20
 static int PORT = 6000;
 char * msg_handler(char * msg){
@@ -69,10 +69,8 @@ int main(){
             exit(1);
         }
         mtid = pthread_self();
-        //pthread_create(&mtid, NULL, thfn, &cfd);
-        thfn(&cfd);
+        pthread_create(&mtid, NULL, thfn, &cfd);
     }
     close(lfd);
-    sleep(1000);
     exit(0);
 }
