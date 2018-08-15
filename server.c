@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <pthread.h>
-#define THR_NUM 2
+#define THR_NUM 3
 #define MAX_LINE 20
 static int PORT = 6000;
 char * msg_handler(char * msg){
@@ -15,9 +15,7 @@ char * msg_handler(char * msg){
     return msg;
 }
 typedef struct{
-    struct sockaddr_in sin,cin;
-    int lfd,cfd;
-    int order;
+    int cfd;
 }ARG;
 void * thfn(void * arg){
     int *p = (int*) arg;
@@ -27,10 +25,11 @@ void * thfn(void * arg){
         perror("fail at function read");
         return (void *)-1;
     }
-    if(write(STDOUT_FILENO,buf,n)==-1){
+    if(write(STDOUT_FILENO,buf,(size_t)n)==-1){
         perror("fail at function write");
         return (void *)-1;
     }
+    fflush(stdout);
     msg_handler(buf);
     if(write(*p,buf,(size_t)n)==-1){
         perror("fail at function write");
@@ -41,11 +40,11 @@ void * thfn(void * arg){
 
 int main(){
     struct sockaddr_in sin,cin;
-    int lfd,cfd;
+    int lfd,cfd,i;
     ARG arg[THR_NUM];
     pthread_t mtid;
-    for(int i = 0;i<THR_NUM;i++)
-        arg[i].order = i;
+//    for(int i = 0;i<THR_NUM;i++)
+//        arg[i].order = i;
     memset(&(sin),0,sizeof(struct sockaddr_in));
     sin.sin_port = htons(PORT);
     sin.sin_addr.s_addr = INADDR_ANY;
@@ -62,14 +61,16 @@ int main(){
         perror("fail at function listen");
         exit(1);
     }
+    i = 0;
     while(1) {
         socklen_t len = sizeof(struct sockaddr);
-        if((cfd = accept(lfd,(struct sockaddr*)&(cin),&len))==-1){
+        if((arg[i].cfd = accept(lfd,(struct sockaddr*)&(cin),&len))==-1){
             perror("fail at function accept");
             exit(1);
         }
         mtid = pthread_self();
-        pthread_create(&mtid, NULL, thfn, &cfd);
+        pthread_create(&mtid, NULL, thfn, &(arg[i].cfd));
+        i++;
     }
     close(lfd);
     exit(0);
